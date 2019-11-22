@@ -23,12 +23,19 @@ test = do
     
     return filteredWords
 
+
+-- mostfrequentwordonpage :: URL -> IO (Maybe String)
+-- mostfrequentwordonpage page = do
+--   return (Just "fixme")
+
+-- TODO use Monad transformers to avoid Maybe checking
 mostfrequentwordonpage :: URL -> IO (Maybe String)
 mostfrequentwordonpage page = do
     wordList <- (fmap.fmap) splitWords (articleBody page)
     strippedWords <- case wordList of
         Nothing -> return Nothing
         Just wordList -> return (Just (fmap removePunct wordList))
+
     stopWords <- getStopWords
 
     filteredWords <- case strippedWords of
@@ -40,19 +47,14 @@ mostfrequentwordonpage page = do
         Just filteredWords -> return (Just (getMaxWord filteredWords))
     return maxWord
 
--- mostfrequentwordonpage :: URL -> IO (Maybe String)
--- mostfrequentwordonpage page = do
---   return (Just "fixme")
-
-type Article = String
-
-articleBody :: URL -> IO (Maybe Article)
+articleBody :: URL -> IO (Maybe String)
 articleBody url = scrapeURL url article
     where
-        article :: Scraper String Article
+        article :: Scraper String String
         article = text ("div" @: ["id" @= "mw-content-text"])
 
-splitWords :: Article -> [String]
+
+splitWords :: String -> [String]
 splitWords t = splitOn " " t
 
 removePunct :: String -> String
