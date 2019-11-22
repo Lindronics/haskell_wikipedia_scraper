@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2fd3b7ba2496ce72b106ea71247cee13ee7998982e46a1a57b608bfdae66d9c9
+-- hash: fe56605e152c7c03a9d0a58d5a18a46b2acc22b5b213d7c401d0734ab34fc6ab
 
 name:           cw-scraper
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
       base >=4.7 && <5
     , scalpel
     , split
+    , transformers
   default-language: Haskell2010
 
 executable cw-scraper-exe
@@ -48,6 +49,7 @@ executable cw-scraper-exe
     , cw-scraper
     , scalpel
     , split
+    , transformers
   default-language: Haskell2010
 
 test-suite cw-scraper-test
@@ -65,4 +67,5 @@ test-suite cw-scraper-test
     , split
     , tasty
     , tasty-hunit
+    , transformers
   default-language: Haskell2010
