@@ -7,6 +7,7 @@ import Text.HTML.Scalpel
 import Text.LaTeX
 import Text.LaTeX.Packages.Inputenc
 import Data.Matrix
+import Data.Text (pack)
 
 import WikiScrapeLib
 
@@ -33,28 +34,26 @@ main = do
      words <- mapM mostfrequentwordonpage (wikify <$> countries)
      let results = zip countries words
      mapM_ (\x -> putStrLn $ (fst x) ++ ": " ++ ((show.snd) x)) results
-     execLaTeXT tables >>= renderFile "tex/tables.tex"
+     execLaTeXT (tables results) >>= renderFile "tex/tables.tex"
 
-tables :: Monad m => LaTeXT m ()
-tables = thePreamble >> document theBody
+tables :: Monad m => [(String, Maybe String)] -> LaTeXT m ()
+tables l = thePreamble >> document (theBody l)
 
 thePreamble :: Monad m => LaTeXT m ()
 thePreamble = do
     documentclass [] article
     usepackage [utf8] inputenc
-    author "Daniel Díaz"
-    title "Examples of Tables"
+    author "Niklas Lindorfer"
+    title "Haskell: Most frequent words on each country's Wikipedia page"
 
-theBody :: Monad m => LaTeXT m ()
-theBody = do
+theBody :: Monad m => [(String, Maybe String)] -> LaTeXT m ()
+theBody l = do
     maketitle
-    -- Table from a simple matrix
-    center $ matrixTabular (fmap textbf ["x","y","z"]) $ fromList 3 3 [ (1 :: Int)..]
-    -- Table from a matrix calculated in-place
-    center $ matrixTabular (fmap textbf ["Number","Square root"]) $ matrix 9 2 $ \(i,j) -> if j == 1 then I i else R $ sqrt $ fromIntegral i
+    let l_l = fmap ((fmap pack).pairToList) l
+    let matr = fromLists l_l
+    center $ matrixTabular (fmap textbf ["Country", "Most frequent word"]) matr
 
-data Number = R Double | I Int
-
-instance Texy Number where
-    texy (R x) = texy x
-    texy (I i) = texy i
+pairToList :: (String, Maybe String) -> [String]
+pairToList (x,y) = case y of
+    Nothing -> [x, "Nothing"]
+    Just y -> [x, y]

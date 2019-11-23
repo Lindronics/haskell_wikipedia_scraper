@@ -25,6 +25,7 @@ dependencies:
 - transformers
 - HaTeX
 - matrix
+- text
 
 library:
   source-dirs: src
