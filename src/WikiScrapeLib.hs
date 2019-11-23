@@ -38,16 +38,14 @@ mostfrequentwordonpage page = do
         let maxWord = snd $ maximum $ getCountTuples filteredWords
         return maxWord
 
-
-catchAny :: IO a -> (SomeException -> IO a) -> IO a
-catchAny = Control.Exception.catch
-
-
 articleBody :: URL -> MaybeT IO String
 articleBody url = MaybeT $ do
     let
         article :: Scraper String String
         article = text ("div" @: ["id" @= "mw-content-text"])
+
+        catchAny :: IO a -> (SomeException -> IO a) -> IO a
+        catchAny = Control.Exception.catch
     catchAny (scrapeURL url article) (\e -> return Nothing) 
 
 
@@ -57,7 +55,7 @@ removePunct s = filter (`elem` (['a'..'z'] ++ ['0'..'9'] :: String)) s
 countOccurrences :: String -> [String] -> Int
 countOccurrences x = length . filter (x==)
 
--- Full list to search for, items to search
+-- |Full list to search for, items to search
 getCounts :: [String] -> [String] -> [Int]
 getCounts l unique = foldr (\x buff -> (countOccurrences x l) : buff) [] unique
 
