@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module WikiScrapeLib
-    (  mostfrequentwordonpage, articleBody, test, removePunct, countOccurrences, getCounts, getCountTuples, getStopWords, filterStopWords
+    (  mostfrequentwordonpage, articleBody, test, removePunct, countOccurrences, getCounts, getCountTuples, getStopWords, filterStopWords, isNumerical
     ) where
 
 import Text.HTML.Scalpel
@@ -33,7 +33,7 @@ mostfrequentwordonpage page = do
         let wordList = (removePunct.(fmap toLower)) <$> (splitWords article)
         let filterList = (stopWords ++ (fmap (return) ['a'..'z']))
         let name = fmap toLower $ last $ splitOn "/" page
-        let filteredWords = filterName name (filterStopWords wordList filterList)
+        let filteredWords = filterNumerical $ filterName name (filterStopWords wordList filterList)
         let maxWord = snd $ maximum $ getCountTuples filteredWords
         return maxWord
     return word
@@ -76,3 +76,9 @@ filterStopWords l stopWords = filter (\x -> not (x `elem` stopWords)) l
 
 filterName :: String -> [String] -> [String]
 filterName name l = filter (\x -> not (take 4 x == take 4 name)) l
+
+isNumerical :: String -> Bool
+isNumerical w = foldr (\x acc -> (x `elem` ['0'..'9']) && acc) True w
+
+filterNumerical :: [String] -> [String]
+filterNumerical l = filter (not.isNumerical) l
