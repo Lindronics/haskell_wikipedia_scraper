@@ -23,6 +23,8 @@ dependencies:
 - scalpel
 - split
 - transformers
+- HaTeX
+- matrix
 
 library:
   source-dirs: src

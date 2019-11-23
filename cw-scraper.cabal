@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fe56605e152c7c03a9d0a58d5a18a46b2acc22b5b213d7c401d0734ab34fc6ab
+-- hash: fbbd92d3a21a256da67fbe2a8439a811a522eb956ae498392f2187577102b537
 
 name:           cw-scraper
 version:        0.1.0.0
@@ -31,7 +31,9 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      HaTeX
+    , base >=4.7 && <5
+    , matrix
     , scalpel
     , split
     , transformers
@@ -45,8 +47,10 @@ executable cw-scraper-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      HaTeX
+    , base >=4.7 && <5
     , cw-scraper
+    , matrix
     , scalpel
     , split
     , transformers
@@ -61,8 +65,10 @@ test-suite cw-scraper-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      HaTeX
+    , base >=4.7 && <5
     , cw-scraper
+    , matrix
     , scalpel
     , split
     , tasty
