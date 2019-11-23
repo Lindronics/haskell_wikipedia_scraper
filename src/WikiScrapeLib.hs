@@ -30,7 +30,7 @@ mostfrequentwordonpage page = do
     word <- runMaybeT $ do
         article <- articleBody page
         stopWords <- getStopWords
-        let wordList = ((fmap toLower).removePunct) <$> (splitWords article)
+        let wordList = (removePunct.(fmap toLower)) <$> (splitWords article)
         let filterList = (stopWords ++ (fmap (return) ['a'..'z']))
         let name = fmap toLower $ last $ splitOn "/" page
         let filteredWords = filterName name (filterStopWords wordList filterList)
@@ -49,7 +49,8 @@ splitWords :: String -> [String]
 splitWords t = splitOn " " t
 
 removePunct :: String -> String
-removePunct s = filter (/= '\n') s
+removePunct s = filter (`elem` (['a'..'z'] ++ ['0'..'9'] :: String)) s
+
 
 countOccurrences :: String -> [String] -> Int
 countOccurrences x = length . filter (x==)
