@@ -9,13 +9,14 @@ import Data.List.Split
 import Control.Monad.Trans.Maybe
 import Data.List (nub)
 import Data.Char
+import Control.Exception
 
 test :: IO (Maybe [String])
 test = do
     words <- runMaybeT $ do
         article <- articleBody "https://en.wikipedia.org/wiki/Germany"
         stopWords <- getStopWords
-        let wordList = removePunct <$> (splitWords article)
+        let wordList = removePunct <$> (splitOn " " article)
         let filteredWords = filterStopWords wordList stopWords
         return filteredWords
     return words
@@ -27,30 +28,31 @@ test = do
 
 mostfrequentwordonpage :: URL -> IO (Maybe String)
 mostfrequentwordonpage page = do
-    word <- runMaybeT $ do
+    runMaybeT $ do
         article <- articleBody page
         stopWords <- getStopWords
-        let wordList = (removePunct.(fmap toLower)) <$> (splitWords article)
+        let wordList = (removePunct.(fmap toLower)) <$> (splitOn " " article)
         let filterList = (stopWords ++ (fmap (return) ['a'..'z']))
         let name = fmap toLower $ last $ splitOn "/" page
         let filteredWords = filterNumerical $ filterName name (filterStopWords wordList filterList)
         let maxWord = snd $ maximum $ getCountTuples filteredWords
         return maxWord
-    return word
+
+
+catchAny :: IO a -> (SomeException -> IO a) -> IO a
+catchAny = Control.Exception.catch
+
 
 articleBody :: URL -> MaybeT IO String
 articleBody url = MaybeT $ do
     let
         article :: Scraper String String
         article = text ("div" @: ["id" @= "mw-content-text"])
-    scrapeURL url article
+    catchAny (scrapeURL url article) (\e -> return Nothing) 
 
-splitWords :: String -> [String]
-splitWords t = splitOn " " t
 
 removePunct :: String -> String
 removePunct s = filter (`elem` (['a'..'z'] ++ ['0'..'9'] :: String)) s
-
 
 countOccurrences :: String -> [String] -> Int
 countOccurrences x = length . filter (x==)
