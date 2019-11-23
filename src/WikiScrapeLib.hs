@@ -8,6 +8,7 @@ import Text.HTML.Scalpel
 import Data.List.Split
 import Control.Monad.Trans.Maybe
 import Data.List (nub)
+import Data.Char
 
 test :: IO (Maybe [String])
 test = do
@@ -29,8 +30,10 @@ mostfrequentwordonpage page = do
     word <- runMaybeT $ do
         article <- articleBody page
         stopWords <- getStopWords
-        let wordList = removePunct <$> (splitWords article)
-        let filteredWords = filterStopWords wordList stopWords
+        let wordList = ((fmap toLower).removePunct) <$> (splitWords article)
+        let filterList = (stopWords ++ (fmap (return) ['a'..'z']))
+        let name = fmap toLower $ last $ splitOn "/" page
+        let filteredWords = filterName name (filterStopWords wordList filterList)
         let maxWord = snd $ maximum $ getCountTuples filteredWords
         return maxWord
     return word
@@ -61,11 +64,14 @@ getCountTuples l = zip (getCounts l (nub l)) (nub l)
 getStopWords :: MaybeT IO ([String])
 getStopWords = MaybeT $ do  
     contents <- readFile "stopwords.txt"
-    stopWords <- return ("a" : (splitOn "\n" contents))
-    if length stopWords < 2
+    stopWords <- return (splitOn "\n" contents)
+    if length stopWords < 1
         then return Nothing
         else return $ Just stopWords
 
 -- List, stopwords
 filterStopWords :: [String] -> [String] -> [String]
-filterStopWords l stopwords = filter (\x -> not (x `elem` stopwords)) l
+filterStopWords l stopWords = filter (\x -> not (x `elem` stopWords)) l
+
+filterName :: String -> [String] -> [String]
+filterName name l = filter (\x -> not (take 4 x == take 4 name)) l
