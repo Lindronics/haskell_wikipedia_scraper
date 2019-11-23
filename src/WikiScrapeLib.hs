@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module WikiScrapeLib
-    (  mostfrequentwordonpage, articleBody, test, removePunct, countOccurrences, getCounts, getCountTuples, getMaxWord, getStopWords, filterStopWords
+    (  mostfrequentwordonpage, articleBody, test, removePunct, countOccurrences, getCounts, getCountTuples, getStopWords, filterStopWords
     ) where
 
 import Text.HTML.Scalpel
@@ -11,48 +11,36 @@ import Data.List (nub)
 
 test :: IO (Maybe [String])
 test = do
-    wordList <- (fmap.fmap) splitWords (articleBody "https://en.wikipedia.org/wiki/Germany")
-    strippedWords <- case wordList of
-        Nothing -> return Nothing
-        Just wordList -> return (Just (fmap removePunct wordList))
-    stopWords <- getStopWords
-
-    filteredWords <- case strippedWords of
-        Nothing -> return Nothing
-        Just strippedWords -> return (Just (filterStopWords strippedWords stopWords))
-    
-    return filteredWords
+    words <- runMaybeT $ do
+        article <- articleBody "https://en.wikipedia.org/wiki/Germany"
+        stopWords <- getStopWords
+        let wordList = removePunct <$> (splitWords article)
+        let filteredWords = filterStopWords wordList stopWords
+        return filteredWords
+    return words
 
 
 -- mostfrequentwordonpage :: URL -> IO (Maybe String)
 -- mostfrequentwordonpage page = do
 --   return (Just "fixme")
 
--- TODO use Monad transformers to avoid Maybe checking
 mostfrequentwordonpage :: URL -> IO (Maybe String)
 mostfrequentwordonpage page = do
-    wordList <- (fmap.fmap) splitWords (articleBody page)
-    strippedWords <- case wordList of
-        Nothing -> return Nothing
-        Just wordList -> return (Just (fmap removePunct wordList))
+    word <- runMaybeT $ do
+        article <- articleBody page
+        stopWords <- getStopWords
+        let wordList = removePunct <$> (splitWords article)
+        let filteredWords = filterStopWords wordList stopWords
+        let maxWord = snd $ maximum $ getCountTuples filteredWords
+        return maxWord
+    return word
 
-    stopWords <- getStopWords
-
-    filteredWords <- case strippedWords of
-        Nothing -> return Nothing
-        Just strippedWords -> return (Just (filterStopWords strippedWords stopWords))
-
-    maxWord <- case filteredWords of 
-        Nothing -> return Nothing
-        Just filteredWords -> return (Just (getMaxWord filteredWords))
-    return maxWord
-
-articleBody :: URL -> IO (Maybe String)
-articleBody url = scrapeURL url article
-    where
+articleBody :: URL -> MaybeT IO String
+articleBody url = MaybeT $ do
+    let
         article :: Scraper String String
         article = text ("div" @: ["id" @= "mw-content-text"])
-
+    scrapeURL url article
 
 splitWords :: String -> [String]
 splitWords t = splitOn " " t
@@ -70,14 +58,13 @@ getCounts l unique = foldr (\x buff -> (countOccurrences x l) : buff) [] unique
 getCountTuples :: [String] -> [(Int, String)]
 getCountTuples l = zip (getCounts l (nub l)) (nub l)
 
-getMaxWord :: [String] -> String
-getMaxWord l = snd $ maximum (getCountTuples l)
-
-getStopWords :: IO ([String])
-getStopWords = do  
+getStopWords :: MaybeT IO ([String])
+getStopWords = MaybeT $ do  
     contents <- readFile "stopwords.txt"
     stopWords <- return ("a" : (splitOn "\n" contents))
-    return stopWords
+    if length stopWords < 2
+        then return Nothing
+        else return $ Just stopWords
 
 -- List, stopwords
 filterStopWords :: [String] -> [String] -> [String]
