@@ -5,18 +5,20 @@ module WikiScrapeLib
     ) where
 
 import Text.HTML.Scalpel
-import Data.List.Split
+import Data.List.Split (splitOn)
 import Control.Monad.Trans.Maybe
 import Data.List (nub)
-import Data.Char
+import Data.Char (toLower)
 import Control.Exception
 
 test :: IO (Maybe [String])
 test = do
     words <- runMaybeT $ do
-        article <- articleBody "https://en.wikipedia.org/wiki/Germany"
+        article <- articleBody "https://en.wikipedia.org/wiki/Ruritania"
         stopWords <- getStopWords
-        let wordList = removePunct <$> (splitOn " " article)
+
+        let wordList = splitOn " " $ toLower <$> (removePunct article)
+        
         let filteredWords = filterStopWords wordList stopWords
         return filteredWords
     return words
@@ -29,14 +31,21 @@ test = do
 mostfrequentwordonpage :: URL -> IO (Maybe String)
 mostfrequentwordonpage page = do
     runMaybeT $ do
+        -- Load Wikipedia article and stop words
         article <- articleBody page
         stopWords <- getStopWords
-        let wordList = (removePunct.(fmap toLower)) <$> (splitOn " " article)
-        let filterList = (stopWords ++ (fmap (return) ['a'..'z']))
-        let name = fmap toLower $ last $ splitOn "/" page
-        let filteredWords = filterNumerical $ filterName name (filterStopWords wordList filterList)
-        let maxWord = snd $ maximum $ getCountTuples filteredWords
-        return maxWord
+
+        -- Remove punct first, then convert to lower and split on whitespace
+        let wordList = splitOn " " $ toLower <$> removePunct article
+
+        -- Remove stopwords, single characters, and words containing name
+        let filterList = stopWords ++ (return <$> ['a'..'z'])
+        let name = toLower <$> (last $ splitOn "/" page)
+        let filteredWords = (filterNumerical.(filterName name).(flip filterStopWords filterList)) wordList
+
+        -- Return most used word
+        return $ snd $ maximum $ getCountTuples filteredWords
+
 
 articleBody :: URL -> MaybeT IO String
 articleBody url = MaybeT $ do
@@ -49,8 +58,17 @@ articleBody url = MaybeT $ do
     catchAny (scrapeURL url article) (\e -> return Nothing) 
 
 
+oldRemovePunct :: String -> String
+oldRemovePunct s = filter (`elem` (['a'..'z'] ++ ['0'..'9'] :: String)) s
+
 removePunct :: String -> String
-removePunct s = filter (`elem` (['a'..'z'] ++ ['0'..'9'] :: String)) s
+removePunct s = let
+    replace :: Char -> Char
+    replace x
+        | x `elem` (['a'..'z'] ++ ['A'..'Z']  ++ ['0'..'9'] :: String) = x
+        | otherwise = ' '
+    in
+        fmap replace s
 
 countOccurrences :: String -> [String] -> Int
 countOccurrences x = length . filter (x==)
@@ -72,7 +90,7 @@ getStopWords = MaybeT $ do
 
 -- List, stopwords
 filterStopWords :: [String] -> [String] -> [String]
-filterStopWords l stopWords = filter (\x -> not (x `elem` stopWords)) l
+filterStopWords l stopWords = filter (\x -> (not (x `elem` stopWords)) && length l > 0) l
 
 filterName :: String -> [String] -> [String]
 filterName name l = filter (\x -> not (take 4 x == take 4 name)) l
