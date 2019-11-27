@@ -2,29 +2,28 @@
 
 
 module WikiScrapeLib
-    (  mostfrequentwordonpage, articleBody, test, removePunct, getCountTuples, getStopWords, filterStopWords, isNumerical
+    (  mostfrequentwordonpage, articleBody, removePunct, getCountTuples, getStopWords, filterStopWords, isNumerical
     ) where
 
 
 import Text.HTML.Scalpel
 import Data.List.Split (splitOn)
 import Control.Monad.Trans.Maybe
-import Data.List (nub, intercalate)
+import Data.List (nub)
 import Data.Char (toLower)
 import Control.Exception
-import Control.Applicative
 
 
-test :: IO (Maybe [String])
-test = do
-    words <- runMaybeT $ do
-        (article, css) <- articleBody "https://en.wikipedia.org/wiki/Ruritania"
-        -- css <- cssJunk "https://en.wikipedia.org/wiki/Ruritania"
-        stopWords <- getStopWords
+-- test :: IO (Maybe [String])
+-- test = do
+--     runMaybeT $ do
+--         (article, css) <- articleBody "https://en.wikipedia.org/wiki/Ruritania"
+--         -- css <- cssJunk "https://en.wikipedia.org/wiki/Ruritania"
+--         stopWords <- getStopWords
 
-        let wordList = splitOn " " $ toLower <$> (removePunct article)
-        let cssList = splitOn " " $ toLower <$> removePunct css
-        return cssList
+--         let wordList = splitOn " " $ toLower <$> (removePunct article)
+--         let cssList = splitOn " " $ toLower <$> removePunct css
+--         return cssList
         
         -- let filterList = stopWords ++ (return <$> ['a'..'z'])
         -- let name = toLower <$> "ruritania"
@@ -32,7 +31,6 @@ test = do
 
         -- -- return filteredWords
         -- return $ getCountTuples filteredWords
-    return words
 
 
 -- mostfrequentwordonpage :: URL -> IO (Maybe String)
@@ -63,7 +61,7 @@ mostfrequentwordonpage page = do
         return $ snd $ maximum $ getCountTuples filteredWords
 
 
-{-| 
+{-|
     Scrapes Wikipedia page with given URL.
     Returns Strings containing article body and CSS tags for filtering.
 -}
@@ -76,13 +74,10 @@ articleBody url = MaybeT $ do
             css <- texts "style"
             return (content, concat css)
 
-        junk :: Scraper String [String]
-        junk = texts "style"
-
         catchAny :: IO a -> (SomeException -> IO a) -> IO a
         catchAny = Control.Exception.catch
 
-    catchAny (scrapeURL url article) (\e -> return Nothing)
+    catchAny (scrapeURL url article) (\_ -> return Nothing)
 
 
 {-|
