@@ -1,6 +1,6 @@
-<Insert Student Name Here>
-GUID:
-Date:
+Niklas Lindorfer
+GUID: 2265846l
+Date: 27/11/2019
 
 -- write what you want in here -- this is just some filler text --
 500 words max
