@@ -1,26 +1,34 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module WikiScrapeLib
-    (  mostfrequentwordonpage, articleBody, test, removePunct, countOccurrences, getCounts, getCountTuples, getStopWords, filterStopWords, isNumerical
+    (  mostfrequentwordonpage, articleBody, test, removePunct, getCountTuples, getStopWords, filterStopWords, isNumerical
     ) where
 
 import Text.HTML.Scalpel
 import Data.List.Split (splitOn)
 import Control.Monad.Trans.Maybe
-import Data.List (nub)
+import Data.List (nub, intercalate)
 import Data.Char (toLower)
 import Control.Exception
+import Control.Applicative
 
 test :: IO (Maybe [String])
 test = do
     words <- runMaybeT $ do
         article <- articleBody "https://en.wikipedia.org/wiki/Ruritania"
+        css <- cssJunk "https://en.wikipedia.org/wiki/Ruritania"
         stopWords <- getStopWords
 
         let wordList = splitOn " " $ toLower <$> (removePunct article)
+        let cssList = splitOn " " $ toLower <$> removePunct (concat css)
+        return cssList
         
-        let filteredWords = filterStopWords wordList stopWords
-        return filteredWords
+        -- let filterList = stopWords ++ (return <$> ['a'..'z'])
+        -- let name = toLower <$> "ruritania"
+        -- let filteredWords = (filterNumerical.(filterName name).(flip filterStopWords filterList)) wordList
+
+        -- -- return filteredWords
+        -- return $ getCountTuples filteredWords
     return words
 
 
@@ -36,19 +44,31 @@ mostfrequentwordonpage page = do
     runMaybeT $ do
         -- Load Wikipedia article and stop words
         article <- articleBody page
+        css <- cssJunk page
         stopWords <- getStopWords
 
         -- Remove punct first, then convert to lower and split on whitespace
         let wordList = splitOn " " $ toLower <$> removePunct article
+        let cssList = splitOn " " $ toLower <$> removePunct (concat css)
 
         -- Remove stopwords, single characters, and words containing name
-        let filterList = stopWords ++ (return <$> ['a'..'z'])
+        let filterList = stopWords ++ cssList ++ (return <$> ['a'..'z'])
         let name = toLower <$> (last $ splitOn "/" page)
         let filteredWords = (filterNumerical.(filterName name).(flip filterStopWords filterList)) wordList
 
         -- Return most used word
         return $ snd $ maximum $ getCountTuples filteredWords
 
+
+-- articleBody :: URL -> MaybeT IO String
+-- articleBody url = MaybeT $ do
+--     let
+--         article :: Scraper String String
+--         article = text $ "div" @: ["id" @= "mw-content-text"]
+
+--         catchAny :: IO a -> (SomeException -> IO a) -> IO a
+--         catchAny = Control.Exception.catch
+--     catchAny (scrapeURL url article) (\e -> return Nothing) 
 
 articleBody :: URL -> MaybeT IO String
 articleBody url = MaybeT $ do
@@ -58,7 +78,18 @@ articleBody url = MaybeT $ do
 
         catchAny :: IO a -> (SomeException -> IO a) -> IO a
         catchAny = Control.Exception.catch
-    catchAny (scrapeURL url article) (\e -> return Nothing) 
+    catchAny (scrapeURL url article) (\e -> return Nothing)
+
+
+cssJunk :: URL -> MaybeT IO [String]
+cssJunk url = MaybeT $ do
+    let
+        junk :: Scraper String [String]
+        junk = texts "style"
+
+        catchAny :: IO a -> (SomeException -> IO a) -> IO a
+        catchAny = Control.Exception.catch
+    catchAny (scrapeURL url junk) (\e -> return Nothing)
 
 
 oldRemovePunct :: String -> String
