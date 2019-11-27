@@ -28,6 +28,9 @@ test = do
 -- mostfrequentwordonpage page = do
 --   return (Just "fixme")
 
+{-|
+    Returns the most frequent word on a given Wikipedia page.
+-}
 mostfrequentwordonpage :: URL -> IO (Maybe String)
 mostfrequentwordonpage page = do
     runMaybeT $ do
@@ -68,7 +71,7 @@ removePunct s = let
         | x `elem` (['a'..'z'] ++ ['A'..'Z']  ++ ['0'..'9'] :: String) = x
         | otherwise = ' '
     in
-        fmap replace s
+        replace <$> s
 
 countOccurrences :: String -> [String] -> Int
 countOccurrences x = length . filter (x==)
