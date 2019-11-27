@@ -15,12 +15,12 @@ import Control.Applicative
 test :: IO (Maybe [String])
 test = do
     words <- runMaybeT $ do
-        article <- articleBody "https://en.wikipedia.org/wiki/Ruritania"
-        css <- cssJunk "https://en.wikipedia.org/wiki/Ruritania"
+        (article, css) <- articleBody "https://en.wikipedia.org/wiki/Ruritania"
+        -- css <- cssJunk "https://en.wikipedia.org/wiki/Ruritania"
         stopWords <- getStopWords
 
         let wordList = splitOn " " $ toLower <$> (removePunct article)
-        let cssList = splitOn " " $ toLower <$> removePunct (concat css)
+        let cssList = splitOn " " $ toLower <$> removePunct css
         return cssList
         
         -- let filterList = stopWords ++ (return <$> ['a'..'z'])
@@ -43,13 +43,12 @@ mostfrequentwordonpage :: URL -> IO (Maybe String)
 mostfrequentwordonpage page = do
     runMaybeT $ do
         -- Load Wikipedia article and stop words
-        article <- articleBody page
-        css <- cssJunk page
+        (article, css) <- articleBody page
         stopWords <- getStopWords
 
         -- Remove punct first, then convert to lower and split on whitespace
         let wordList = splitOn " " $ toLower <$> removePunct article
-        let cssList = splitOn " " $ toLower <$> removePunct (concat css)
+        let cssList = splitOn " " $ toLower <$> removePunct css
 
         -- Remove stopwords, single characters, and words containing name
         let filterList = stopWords ++ cssList ++ (return <$> ['a'..'z'])
@@ -60,40 +59,23 @@ mostfrequentwordonpage page = do
         return $ snd $ maximum $ getCountTuples filteredWords
 
 
--- articleBody :: URL -> MaybeT IO String
--- articleBody url = MaybeT $ do
---     let
---         article :: Scraper String String
---         article = text $ "div" @: ["id" @= "mw-content-text"]
-
---         catchAny :: IO a -> (SomeException -> IO a) -> IO a
---         catchAny = Control.Exception.catch
---     catchAny (scrapeURL url article) (\e -> return Nothing) 
-
-articleBody :: URL -> MaybeT IO String
+articleBody :: URL -> MaybeT IO (String, String)
 articleBody url = MaybeT $ do
     let
-        article :: Scraper String String
-        article = text ("div" @: ["id" @= "mw-content-text"])
+        article :: Scraper String (String, String)
+        article = do 
+            content <- text ("div" @: ["id" @= "mw-content-text"])
+            css <- texts "style"
+            return (content, concat css)
 
-        catchAny :: IO a -> (SomeException -> IO a) -> IO a
-        catchAny = Control.Exception.catch
-    catchAny (scrapeURL url article) (\e -> return Nothing)
-
-
-cssJunk :: URL -> MaybeT IO [String]
-cssJunk url = MaybeT $ do
-    let
         junk :: Scraper String [String]
         junk = texts "style"
 
         catchAny :: IO a -> (SomeException -> IO a) -> IO a
         catchAny = Control.Exception.catch
-    catchAny (scrapeURL url junk) (\e -> return Nothing)
 
+    catchAny (scrapeURL url article) (\e -> return Nothing)
 
-oldRemovePunct :: String -> String
-oldRemovePunct s = filter (`elem` (['a'..'z'] ++ ['0'..'9'] :: String)) s
 
 removePunct :: String -> String
 removePunct s = let
