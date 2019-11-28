@@ -16,30 +16,6 @@ import qualified Data.Map as Map
 import Data.Tuple (swap)
 
 
--- test :: IO (Maybe [String])
--- test = do
---     runMaybeT $ do
---         (article, css) <- articleBody "https://en.wikipedia.org/wiki/Ruritania"
---         -- css <- cssJunk "https://en.wikipedia.org/wiki/Ruritania"
---         stopWords <- getStopWords
-
---         let wordList = splitOn " " $ toLower <$> (removePunct article)
---         let cssList = splitOn " " $ toLower <$> removePunct css
---         return cssList
-        
-        -- let filterList = stopWords ++ (return <$> ['a'..'z'])
-        -- let name = toLower <$> "ruritania"
-        -- let filteredWords = (filterNumerical.(filterName name).(flip filterStopWords filterList)) wordList
-
-        -- -- return filteredWords
-        -- return $ getCountTuples filteredWords
-
-
--- mostfrequentwordonpage :: URL -> IO (Maybe String)
--- mostfrequentwordonpage page = do
---   return (Just "fixme")
-
-
 {-|
     Returns the most frequent word on a given Wikipedia page.
 -}
@@ -57,7 +33,7 @@ mostfrequentwordonpage page = do
         -- Remove stopwords, css junk, single characters, and words containing name
         let filterList = stopWords ++ cssList ++ (return <$> ['a'..'z'])
         let name = toLower <$> (last $ splitOn "/" page)
-        let filteredWords = (filterNumerical.(filterName name).(flip filterStopWords filterList)) wordList
+        let filteredWords = (filterNumerical.(filterName name).(filterStopWords filterList)) wordList
 
         -- Return most used word
         return $ snd $ maximum $ occurrences filteredWords
@@ -112,10 +88,13 @@ getStopWords = MaybeT $ do
 
 {-| 
     Removes stopwords from a list of Strings.
-    Takes list to be filtered, list of stopwords.
+    Takes list of stopwords, list to be filtered.
 -}
 filterStopWords :: [String] -> [String] -> [String]
-filterStopWords l stopWords = filter (\x -> (not (x `elem` stopWords)) && length l > 0) l
+filterStopWords stopWords l = let
+    stopWordsDict = Map.fromList [(word, 0) | word <- stopWords]
+    in
+        filter (\x -> (not (x `Map.member` stopWordsDict))) l
 
 
 {-| 
