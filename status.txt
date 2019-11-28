@@ -1,20 +1,14 @@
 Niklas Lindorfer
 GUID: 2265846l
 Date: 27/11/2019
-200 words max
 
 The code builds and compiles without problems. It passes all provided unit tests.
 It should work completely according to specification and is fully documented with Haddock comments.
 
-Design
-
 To make sure junk CSS code gets removed from the list of words, I added a second selector that retrieved all text enclosed within <style> tags to the scraper. I then add the stripped tokens from that list to the list of stop words.
-For counting the occurrences of the words in the article, I use the Data.List.nub function to convert the list to a set and thus obtain the unique elements.
-I then count the number of occurrences of each item in the set in the original list using a right fold. This is not the most computationally efficient way to perform this operation, as it runs roughly in O(n^2) time. However, since performance optimization was not required, I decided to stick to this method.
 
-For part B, I decided to generate a .tex file using HaTeX displaying a report containing a table with the results. For this purpose, I imported the matrix package to make it easier to generate the table.
-The LaTeX output is well-formed and compiles with TeXLive. The file is stored in the tex subdirectory, to keep the main project directory clean of all the auxiliary LaTeX files.
+The code should be fairly well-optimized for performance. For counting word occurrences and stripping stop words I use maps. These operations should run with O(nlog(n)) and O(n+m) runtimes respectively.
 
-Differences
+For part B, I decided to generate a .tex file using HaTeX, displaying a report containing a table with the results. Additionally, I imported the matrix package to make it easier to generate the table. Furthermore, the code reads the contents of this file and the report.txt file and adds them as sections to the LaTeX document.
 
-
+The LaTeX output is well-formed and compiles with TeXLive. The file is stored in the tex subdirectory, to keep the main project directory clean of all the auxiliary LaTeX files. You can find the example output there.
