@@ -2,7 +2,7 @@
 
 
 module WikiScrapeLib
-    (  mostfrequentwordonpage, articleBody, removePunct, getCountTuples, getStopWords, filterStopWords, isNumerical
+    (  mostfrequentwordonpage, articleBody, occurrences, removePunct, getStopWords, filterStopWords, isNumerical
     ) where
 
 
@@ -12,6 +12,8 @@ import Control.Monad.Trans.Maybe
 import Data.List (nub)
 import Data.Char (toLower)
 import Control.Exception
+import qualified Data.Map as Map
+import Data.Tuple (swap)
 
 
 -- test :: IO (Maybe [String])
@@ -58,7 +60,7 @@ mostfrequentwordonpage page = do
         let filteredWords = (filterNumerical.(filterName name).(flip filterStopWords filterList)) wordList
 
         -- Return most used word
-        return $ snd $ maximum $ getCountTuples filteredWords
+        return $ snd $ maximum $ occurrences filteredWords
 
 
 {-|
@@ -92,31 +94,6 @@ removePunct s = let
         | otherwise = ' '
     in
         replace <$> s
-
-
-{-| 
-   Counts number of occurrences of a String in a List of Strings. 
--}
-countOccurrences :: String -> [String] -> Int
-countOccurrences x = length . filter (x==)
-
-
-{-|
-    Gets counts of the elements of a list of Strings
-    in another list of Strings.
-    Takes full list with items to search for, list to search in.
-    Returns ordered list of counts.
--}
-getCounts :: [String] -> [String] -> [Int]
-getCounts l unique = foldr (\x buff -> (countOccurrences x l) : buff) [] unique
-
-
-{-| 
-    Gets counts of each element in a list of Strings.
-    Returns list of tuples of count and unique item.
--}
-getCountTuples :: [String] -> [(Int, String)]
-getCountTuples l = zip (getCounts l (nub l)) (nub l)
 
 
 {-| 
@@ -161,3 +138,11 @@ isNumerical w = foldr (\x acc -> (x `elem` ['0'..'9']) && acc) True w
 -}
 filterNumerical :: [String] -> [String]
 filterNumerical l = filter (not.isNumerical) l
+
+
+{-| 
+    Counts item occurrences in a list.
+    Returns list of tuples of occurrences and items.
+-}
+occurrences :: (Ord a) => [a] -> [(Int, a)]
+occurrences xs = map swap $ Map.toList (Map.fromListWith (+) [(x, 1) | x <- xs])
