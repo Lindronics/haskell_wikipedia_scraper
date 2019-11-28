@@ -20,7 +20,7 @@ Language paradigms and style
 
 Haskell, despite being statically typed, is an incredibly flexible language. It allows the definition of new operators and many operations have been overloaded multiple times. As a result, the same task can be performed in many different ways. 
 
-The zen of Python states that there should usually be one single obvious way to approach a problem. As a result, Python programs are highly standardised and very easy to read and debug, as they follow very rigid conventions. 
+The zen of Python states that there should usually be one single obvious way to approach a problem. As a result, Python programs are highly standardised and very easy to read, as they follow very rigid conventions. 
 
 Haskell code, while being more flexible, is most likely much harder to read for other people, due to the sheer complexity of the syntax and the amount of similarly defined functions.
 
