@@ -29,9 +29,17 @@ countries = [
           "Russia"
          ]
 
+
 wikify :: String -> URL
 wikify x = "https://en.wikipedia.org/wiki/" ++ x
 
+
+{-| 
+    Runs mostfrequentwordonpage on the list of countries.
+    Outputs the results to stdout.
+    Generates a .tex file containing the tabulated results
+    and the contents of the report and status files.
+-}
 main :: IO ()
 main = do
     words <- mapM mostfrequentwordonpage (wikify <$> countries)
@@ -39,11 +47,20 @@ main = do
     mapM_ (\x -> putStrLn $ (fst x) ++ ": " ++ ((show.snd) x)) results
     status <- getReport "status.txt"
     report <- getReport "report.txt"
-    execLaTeXT (tables results status report) >>= renderFile "tex/tables.tex"
+    execLaTeXT (texFile results status report) >>= renderFile "tex/tables.tex"
 
-tables :: Monad m => [(String, Maybe String)] -> String -> String -> LaTeXT m ()
-tables l status report = thePreamble >> document (theBody l status report)
 
+{-| 
+    Generates the contents of the LaTeX file.
+    Takes list of results, status file contents, report contents.
+-}
+texFile :: Monad m => [(String, Maybe String)] -> String -> String -> LaTeXT m ()
+texFile l status report = thePreamble >> document (theBody l status report)
+
+
+{-| 
+    Generates the preamble for the LaTeX file.
+-}
 thePreamble :: Monad m => LaTeXT m ()
 thePreamble = do
     documentclass [] article
@@ -51,6 +68,11 @@ thePreamble = do
     author "Niklas Lindorfer"
     title "Haskell: Most frequent words on each country's Wikipedia page"
 
+
+{-| 
+    Generates the body for the LaTeX file.
+    Takes list of results, status file contents, report contents.
+-}
 theBody :: Monad m => [(String, Maybe String)] -> String -> String -> LaTeXT m ()
 theBody l status report = do
     maketitle
@@ -64,11 +86,20 @@ theBody l status report = do
     fromString report
 
 
+{-| 
+    Converts output list to flattened list of Strings.
+    This is necessary to handle maybe values.
+-}
 pairToList :: (String, Maybe String) -> [String]
 pairToList (x,y) = case y of
-    Nothing -> [x, "Nothing"]
+    Nothing -> [x, "N/A"]
     Just y -> [x, y]
 
+
+{-| 
+    Retrieves a file given a path.
+    Will return placeholder string if an exception occurs.
+-}
 getReport :: String -> IO String
 getReport s = do
     contents <- try $ readFile s
