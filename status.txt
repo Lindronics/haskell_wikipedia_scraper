@@ -2,12 +2,24 @@ Niklas Lindorfer
 GUID: 2265846l
 Date: 27/11/2019
 
+
+Does the code run?
+
+
 The code builds and compiles without problems. It passes all provided unit tests.
 It should work completely according to specification and is fully documented with Haddock comments.
+
+
+Implementation
+
 
 To make sure junk CSS code gets removed from the list of words, I added a second selector that retrieved all text enclosed within <style> tags to the scraper. I then add the stripped tokens from that list to the list of stop words.
 
 The code should be fairly well-optimized for performance. For counting word occurrences and stripping stop words I use maps. These operations should run with O(nlog(n)) and O(n+m) runtimes respectively.
+
+
+Part B
+
 
 For part B, I decided to generate a .tex file using HaTeX, displaying a report containing a table with the results. Additionally, I imported the matrix package to make it easier to generate the table. Furthermore, the code reads the contents of this file and the report.txt file and adds them as sections to the LaTeX document.
 

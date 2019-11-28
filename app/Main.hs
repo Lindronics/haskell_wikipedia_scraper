@@ -11,6 +11,7 @@ import Data.Matrix
 import Data.Text (pack)
 import Control.Monad.Trans.Maybe
 import Control.Exception
+import Data.List.Split (splitOn)
 
 import WikiScrapeLib
 
@@ -76,14 +77,33 @@ thePreamble = do
 theBody :: Monad m => [(String, Maybe String)] -> String -> String -> LaTeXT m ()
 theBody l status report = do
     maketitle
+
+    -- Status: triple newlines denote new section
     section "Status"
-    fromString status
+    fromStrList (splitOn "\n\n\n" status) False
+
+    -- Get execution results
     section "Execution Results"
-    let l_l = fmap ((fmap pack).pairToList) l
-    let matr = fromLists l_l
+    let matr = fromLists (fmap ((fmap pack).pairToList) l)
     center $ matrixTabular (fmap textbf ["Country", "Most frequent word"]) matr
+
+    -- Report: triple newlines denote new section
     section "Report"
-    fromString report
+    fromStrList (splitOn "\n\n\n" report) False
+
+
+{-| 
+    Generates a section for the LaTeX file.
+    Takes a list of Strings.
+    Alternates between headings and body.
+-}
+fromStrList :: Monad m => [String] -> Bool -> LaTeXT_ m
+fromStrList [] _ = ""
+fromStrList (x:xs) isHeading = do
+    if isHeading
+        then subsection $ fromString x
+        else fromString x
+    fromStrList xs (not isHeading)
 
 
 {-| 

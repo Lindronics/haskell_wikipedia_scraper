@@ -4,7 +4,9 @@ Date: 27/11/2019
 
 This report shall reflect my experiences with the Haskell programming language and compare it to Python, a popular imperative language.
 
+
 Code
+
 
 Both Haskell and Python have a very concise syntax. 
 
@@ -12,7 +14,9 @@ Haskell has some very powerful features compared to Python, such as currying and
 
 On the other hand, there appear to be some operations that can be expressed in a simpler way in imperative languages, such as error handling and sequential actions such as IO. Functional programming seems to be ideal for pure computations but can get a bit verbose when handling impure operations.
 
+
 Language paradigms and style
+
 
 Haskell, despite being statically typed, is an incredibly flexible language. It allows the definition of new operators and many operations have been overloaded multiple times. As a result, the same task can be performed in many different ways. 
 
@@ -20,7 +24,9 @@ The zen of Python states that there should usually be one single obvious way to 
 
 Haskell code, while being more flexible, is most likely much harder to read for other people, due to the sheer complexity of the syntax and the amount of similarly defined functions.
 
+
 Toolchain support
+
 
 Stack seems to be very powerful and offers all the functionality that one is used to from using PIP or conda. 
 
@@ -28,7 +34,9 @@ In general, the documentation of the Haskell libraries I used does not seem to h
 
 Without prior knowledge, it thus took a long time browsing through code examples to understand how to use a module. 
 
+
 Debugging
+
 
 Installing the Haskell IDE Engine and the respective VS Code extension was incredibly helpful, as it provided type checking and displaying documentation. This made it easier to debug type errors and check the behaviour of certain functions and modules.
 
@@ -36,7 +44,9 @@ Haskell, being statically typed, makes it easier to debug many exceptions, as th
 
 Furthermore, as a functional language, Haskell code is designed to be stateless and produce no side effects. This makes code behaviour much more predictable and makes the language much more viable for safety-critical applications.
 
+
 Conclusion
+
 
 Once I had wrapped my head around how to work with the IO and Maybe monads, writing code became a lot easier. Haskell has a very steep learning curve compared to Python and is hardly suitable for unexperienced programmers. However, its flexibility allows for a very high amount of creativity when solving problems. Therefore, it seems like a very powerful language for experienced programmers to master. 
 
