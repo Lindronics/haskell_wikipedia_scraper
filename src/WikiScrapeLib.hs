@@ -2,7 +2,7 @@
 
 
 module WikiScrapeLib
-    (  mostfrequentwordonpage, articleBody, occurrences, removePunct, getStopWords, filterStopWords, isNumerical
+    ( mostfrequentwordonpage
     ) where
 
 
